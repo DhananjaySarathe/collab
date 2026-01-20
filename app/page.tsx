@@ -15,9 +15,9 @@ import {
 
 // REPLACE THESE WITH YOUR ACTUAL YOUTUBE VIDEO IDs
 const LATEST_VIDEOS = [
-  { id: "dQw4w9WgXcQ", title: "Building the Future of AdTech" },
-  { id: "jNQXAC9IVRw", title: "Bengaluru Startup Life" },
-  { id: "9bZkp7q19f0", title: "Coding Music for Focus" }
+  { id: "SVVpGOyQLXs", title: "How I Got Hired as a Freshman (Without Campus Placement)" },
+  { id: "wC3WhSFRXp0", title: "My Life as a Software Engineer in Bangalore" },
+  { id: "2ilCBd9LE_U", title: "My Life as a Remove SDE" }
 ];
 
 // --- Components ---
