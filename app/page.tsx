@@ -8,8 +8,10 @@ import {
   Github,
   Linkedin,
   Send,
-  Youtube
+  Youtube,
+  X
 } from "lucide-react";
+import { trackFormSubmission, trackButtonClick, trackEvent } from "@/lib/mixpanel";
 
 // --- Constants ---
 
@@ -51,12 +53,16 @@ const PixelButton = ({
   children,
   onClick,
   variant = "primary",
-  className = ""
+  className = "",
+  type = "button",
+  disabled = false
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   variant?: "primary" | "secondary" | "danger" | "ghost";
   className?: string;
+  type?: "button" | "submit" | "reset";
+  disabled?: boolean;
 }) => {
   const baseStyles =
     "relative px-6 py-3 font-bold uppercase text-sm transition-all transform active:translate-y-1 active:translate-x-1 active:shadow-none border-2";
@@ -72,8 +78,17 @@ const PixelButton = ({
       "bg-transparent text-green-400 border-green-400 shadow-[4px_4px_0px_0px_rgba(74,222,128,0.4)] hover:bg-green-400/10"
   } as const;
 
+  const disabledStyles = disabled 
+    ? "opacity-50 cursor-not-allowed pointer-events-none" 
+    : "";
+
   return (
-    <button onClick={onClick} className={`${baseStyles} ${variants[variant]} ${className}`}>
+    <button 
+      type={type} 
+      onClick={onClick} 
+      disabled={disabled}
+      className={`${baseStyles} ${variants[variant]} ${disabledStyles} ${className}`}
+    >
       {children}
     </button>
   );
@@ -82,21 +97,87 @@ const PixelButton = ({
 const RetroInput = ({
   label,
   placeholder,
-  type = "text"
+  type = "text",
+  name,
+  required = false
 }: {
   label: string;
   placeholder: string;
   type?: string;
+  name?: string;
+  required?: boolean;
 }) => (
   <div className="mb-4">
     <label className="block text-xs uppercase text-green-400 mb-2 font-bold">{label}</label>
     <input
       type={type}
+      name={name}
+      required={required}
       placeholder={placeholder}
-      className="w-full bg-gray-800 border-2 border-gray-600 p-3 text-white font-mono focus:border-green-400 focus:outline-none focus:shadow-[0_0_10px_rgba(74,222,128,0.5)] placeholder-gray-600"
+      className="w-full bg-gray-800 border-2 border-gray-600 p-3 text-white font-mono focus:border-green-400 focus:outline-none focus:shadow-[0_0_10px_rgba(74,222,128,0.5)] placeholder-gray-600 transition-all"
     />
   </div>
 );
+
+const RetroTextarea = ({
+  label,
+  placeholder,
+  name,
+  required = false
+}: {
+  label: string;
+  placeholder: string;
+  name?: string;
+  required?: boolean;
+}) => (
+  <div className="mb-4">
+    <label className="block text-xs uppercase text-green-400 mb-2 font-bold">{label}</label>
+    <textarea
+      name={name}
+      required={required}
+      placeholder={placeholder}
+      rows={4}
+      className="w-full bg-gray-800 border-2 border-gray-600 p-3 text-white font-mono focus:border-green-400 focus:outline-none focus:shadow-[0_0_10px_rgba(74,222,128,0.5)] placeholder-gray-600 transition-all resize-none"
+    />
+  </div>
+);
+
+const Modal = ({
+  isOpen,
+  onClose,
+  children,
+  title
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title: string;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      ></div>
+      
+      {/* Modal Content */}
+      <div className="relative w-full max-w-lg transform transition-all animate-fade-in-up">
+        <PixelCard title={title} className="bg-[#111] border-green-500 shadow-[0_0_30px_rgba(74,222,128,0.1)]">
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+          >
+            <X size={24} />
+          </button>
+          {children}
+        </PixelCard>
+      </div>
+    </div>
+  );
+};
 
 const RetroTV = ({ videoId, title }: { videoId: string; title: string }) => (
   <div className="group relative">
@@ -208,14 +289,20 @@ const Hero = () => {
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mt-10 w-full px-6 sm:px-0 max-w-md sm:max-w-none mx-auto">
           <PixelButton
             variant="primary"
-            onClick={() => document.getElementById("collab")?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => {
+              trackButtonClick('Start Collaboration', { location: 'hero_section' });
+              document.getElementById("collab")?.scrollIntoView({ behavior: "smooth" });
+            }}
             className="w-full sm:w-auto justify-center flex text-base py-4"
           >
             Start Collaboration
           </PixelButton>
           <PixelButton
             variant="ghost"
-            onClick={() => window.open("https://www.youtube.com/@ChilledBeer", "_blank", "noopener,noreferrer")}
+            onClick={() => {
+              trackButtonClick('Visit Channel', { location: 'hero_section', channel: 'ChilledBeer' });
+              window.open("https://www.youtube.com/@ChilledBeer", "_blank", "noopener,noreferrer");
+            }}
             className="w-full sm:w-auto justify-center flex text-base py-4"
           >
             <div className="flex items-center gap-2">
@@ -313,6 +400,62 @@ const ChannelStats = () => {
 };
 
 const CollabSection = () => {
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+
+  React.useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe || !isModalOpen) return;
+
+    const handleIframeLoad = () => {
+      // When iframe loads, form was submitted
+      setIsSubmitted(true);
+      
+      // Track successful form submission
+      const form = document.querySelector('form') as HTMLFormElement;
+      if (form) {
+        const formData = new FormData(form);
+        const submissionData: Record<string, string> = {};
+        formData.forEach((value, key) => {
+          submissionData[key] = value.toString();
+        });
+        
+        trackFormSubmission('Join The Party Form', {
+          ...submissionData,
+          timestamp: new Date().toISOString(),
+        });
+      }
+      
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setIsSubmitted(false);
+      }, 3000);
+    };
+
+    iframe.addEventListener('load', handleIframeLoad);
+    return () => iframe.removeEventListener('load', handleIframeLoad);
+  }, [isModalOpen]);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    // Don't prevent default - let form submit to iframe
+    // Google Forms only accepts client-side submissions
+    
+    // Track form submission attempt
+    trackEvent('Form Submit Attempted', {
+      form_name: 'Join The Party Form',
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    trackButtonClick('Join The Party', {
+      location: 'collab_section',
+      timestamp: new Date().toISOString(),
+    });
+  };
+
   return (
     <section id="collab" className="py-12 md:py-20 bg-[#0a0a0a] relative overflow-hidden">
       {/* Decorative Pixels */}
@@ -362,18 +505,101 @@ const CollabSection = () => {
                 </ul>
               </div>
 
-              <div className="space-y-4">
-                <RetroInput label="Player Name" placeholder="Enter your name..." />
-                <RetroInput label="Guild / Project" placeholder="What are you building?" />
-                <RetroInput label="Communication Channel" placeholder="Email or Twitter handle" />
-                <PixelButton variant="primary" className="w-full flex justify-center items-center gap-2">
-                  <Send size={16} /> Send Request
+              <div className="space-y-6 flex flex-col justify-center h-full">
+                <div className="space-y-2 text-center md:text-left">
+                  <h4 className="text-green-400 font-vt323 text-2xl uppercase">Ready to Connect?</h4>
+                  <p className="text-gray-400 font-mono text-sm">
+                    We review requests every weekend. Click the button below to drop your details.
+                  </p>
+                </div>
+
+                <PixelButton 
+                  variant="primary" 
+                  className="w-full flex justify-center items-center gap-2 py-4 animate-pulse hover:animate-none"
+                  onClick={handleOpenModal}
+                >
+                  <Send size={18} /> JOIN THE PARTY
                 </PixelButton>
               </div>
             </div>
           </PixelCard>
         </div>
       </div>
+
+      {/* Application Modal */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title="NEW PLAYER REGISTRATION"
+      >
+        {isSubmitted ? (
+          <div className="text-center py-12 space-y-4">
+            <div className="w-16 h-16 bg-green-500 rounded-full mx-auto flex items-center justify-center animate-bounce">
+              <Send size={32} className="text-black" />
+            </div>
+            <h3 className="text-2xl font-vt323 text-white">TRANSMISSION SENT!</h3>
+            <p className="text-gray-400 font-mono text-sm">
+              We have received your signal. <br/> Stay tuned for incoming connection.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-gray-400 font-mono text-xs mb-6 border-l-2 border-yellow-400 pl-3">
+              Fill out the form below to join the waitlist. We usually reply within 48 hours.
+            </p>
+            
+            <iframe 
+              ref={iframeRef}
+              name="hidden_iframe" 
+              id="hidden_iframe" 
+              style={{position: 'absolute', left: '-9999px', width: '1px', height: '1px', border: 'none'}}
+              title="Hidden iframe for form submission"
+            ></iframe>
+            <form 
+              action="https://docs.google.com/forms/d/e/1FAIpQLSewjhj_RTogrHrX72HID0ZBPVmTWEm5ta9lyNsGoVLeohSvRA/formResponse"
+              method="POST"
+              target="hidden_iframe"
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
+              <RetroInput 
+                label="Player Name" 
+                placeholder="Enter your name..." 
+                name="entry.575236684" 
+                required 
+              />
+              <RetroInput 
+                label="Communication Channel" 
+                placeholder="Twitter/X or Email" 
+                name="entry.113215161" 
+                required 
+              />
+              <RetroInput 
+                label="Guild / Project" 
+                placeholder="What are you building?" 
+                name="entry.1261980469" 
+                required 
+              />
+              <RetroTextarea 
+                label="The Context" 
+                placeholder="What would you like to discuss or show us?" 
+                name="entry.272861269" 
+                required 
+              />
+              
+              <div className="pt-4">
+                <PixelButton 
+                  type="submit" 
+                  variant="primary" 
+                  className="w-full flex justify-center items-center gap-2"
+                >
+                  <Send size={16} /> TRANSMIT DATA
+                </PixelButton>
+              </div>
+            </form>
+          </div>
+        )}
+      </Modal>
     </section>
   );
 };
