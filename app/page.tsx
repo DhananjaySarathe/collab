@@ -11,7 +11,7 @@ import {
   Youtube,
   X
 } from "lucide-react";
-import { trackFormSubmission, trackButtonClick, trackEvent } from "@/lib/mixpanel";
+import { trackFormSubmission } from "@/lib/mixpanel";
 
 // --- Constants ---
 
@@ -293,20 +293,14 @@ const Hero = () => {
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mt-10 w-full px-6 sm:px-0 max-w-md sm:max-w-none mx-auto">
           <PixelButton
             variant="primary"
-            onClick={() => {
-              trackButtonClick('Start Collaboration', { location: 'hero_section' });
-              document.getElementById("collab")?.scrollIntoView({ behavior: "smooth" });
-            }}
+            onClick={() => document.getElementById("collab")?.scrollIntoView({ behavior: "smooth" })}
             className="w-full sm:w-auto justify-center flex text-base py-4"
           >
             Start Collaboration
           </PixelButton>
           <PixelButton
             variant="ghost"
-            onClick={() => {
-              trackButtonClick('Visit Channel', { location: 'hero_section', channel: 'ChilledBeer' });
-              window.open("https://www.youtube.com/@ChilledBeer", "_blank", "noopener,noreferrer");
-            }}
+            onClick={() => window.open("https://www.youtube.com/@ChilledBeer", "_blank", "noopener,noreferrer")}
             className="w-full sm:w-auto justify-center flex text-base py-4"
           >
             <div className="flex items-center gap-2">
@@ -460,20 +454,10 @@ const CollabSection = ({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     // Don't prevent default - let form submit to iframe
     // Google Forms only accepts client-side submissions
-    
-    // Track form submission attempt
-    trackEvent('Form Submit Attempted', {
-      form_name: 'Join The Party Form',
-      timestamp: new Date().toISOString(),
-    });
   };
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
-    trackButtonClick('Join The Party', {
-      location: 'collab_section',
-      timestamp: new Date().toISOString(),
-    });
   };
 
   return (
@@ -646,10 +630,6 @@ export default function Page() {
 
   const handleConnectClick = () => {
     setIsModalOpen(true);
-    trackButtonClick('Connect', {
-      location: 'navbar',
-      timestamp: new Date().toISOString(),
-    });
   };
 
   return (
