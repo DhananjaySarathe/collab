@@ -35,11 +35,11 @@ const PixelCard = ({
 }) => (
   <div
     className={`relative bg-gray-900 border-4 border-gray-200 shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)] ${className} ${
-      noPadding ? "p-0" : "p-6"
+    noPadding ? "p-0" : "p-4 md:p-6"
     }`}
   >
     {title && (
-      <div className="absolute -top-5 left-4 bg-gray-200 text-gray-900 px-4 py-1 font-bold uppercase tracking-widest text-sm border-2 border-gray-900 z-10">
+      <div className="absolute -top-5 left-2 md:left-4 bg-gray-200 text-gray-900 px-3 md:px-4 py-1 font-bold uppercase tracking-widest text-xs md:text-sm border-2 border-gray-900 z-10">
         {title}
       </div>
     )}
@@ -150,10 +150,16 @@ const Navbar = () => (
       </span>
     </div>
     <div className="hidden md:flex gap-6 text-sm font-bold uppercase tracking-widest text-gray-400">
-      <a href="#content" className="hover:text-green-400 hover:underline decoration-2 underline-offset-4">
+      <a
+        href="#content"
+        className="hover:text-green-400 hover:underline decoration-2 underline-offset-4 transition-all"
+      >
         Content
       </a>
-      <a href="#collab" className="hover:text-yellow-400 hover:underline decoration-2 underline-offset-4">
+      <a
+        href="#collab"
+        className="hover:text-yellow-400 hover:underline decoration-2 underline-offset-4 transition-all"
+      >
         Collab
       </a>
     </div>
@@ -165,7 +171,7 @@ const Navbar = () => (
 
 const Hero = () => {
   return (
-    <section className="min-h-[80vh] flex flex-col justify-center items-center relative overflow-hidden pt-20 px-4 bg-[#050505]">
+    <section className="min-h-[90vh] flex flex-col justify-center items-center relative overflow-hidden pt-24 pb-12 px-4 bg-[#050505]">
       {/* Grid Background */}
       <div
         className="absolute inset-0 z-0 opacity-20"
@@ -176,35 +182,44 @@ const Hero = () => {
         }}
       ></div>
 
-      <div className="z-10 text-center max-w-4xl mx-auto space-y-8">
-        <div className="inline-block bg-gray-800 px-4 py-1 rounded-none border border-green-500/50 text-green-400 font-mono text-sm mb-4 animate-fade-in-up shadow-[0_0_15px_rgba(74,222,128,0.2)]">
+      {/* Vignette & Scanlines */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)] pointer-events-none z-0"></div>
+      <div className="absolute inset-0 scanlines z-0 opacity-30"></div>
+
+      <div className="z-10 text-center max-w-5xl mx-auto space-y-6 md:space-y-10 relative">
+        <div className="inline-block bg-gray-900/80 backdrop-blur-sm px-4 py-1.5 rounded border border-green-500/30 text-green-400 font-mono text-xs md:text-sm mb-4 animate-fade-in-up shadow-[0_0_15px_rgba(74,222,128,0.1)] tracking-wider">
+          <span className="animate-pulse mr-2">●</span>
           LOCATION: BENGALURU_SERVER_1
         </div>
 
-        <h1 className="text-5xl md:text-8xl font-bold text-white leading-none font-vt323 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+        <h1 className="text-5xl sm:text-7xl md:text-9xl font-bold text-white leading-[0.85] tracking-wide font-vt323 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
           BUILDING THE FUTURE <br />
-          <span className="text-yellow-400">ONE PIXEL AT A TIME</span>
+          <span className="text-[#f4d73b] drop-shadow-[0_0_15px_rgba(244,215,59,0.3)]">
+            ONE PIXEL AT A TIME
+          </span>
         </h1>
 
-        <p className="text-lg md:text-2xl text-gray-400 font-mono max-w-2xl mx-auto leading-relaxed">
+        <p className="text-base sm:text-xl md:text-2xl text-gray-400 font-mono max-w-3xl mx-auto leading-relaxed px-4">
           Founders, Builders, and Creators of Bangalore.
-          <br />
+          <br className="hidden md:block" />
           Let&apos;s collaborate, ship products, and drink chilled beer.
         </p>
 
-        <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mt-10 w-full px-6 sm:px-0 max-w-md sm:max-w-none mx-auto">
           <PixelButton
             variant="primary"
             onClick={() => document.getElementById("collab")?.scrollIntoView({ behavior: "smooth" })}
+            className="w-full sm:w-auto justify-center flex text-base py-4"
           >
             Start Collaboration
           </PixelButton>
           <PixelButton
             variant="ghost"
             onClick={() => window.open("https://www.youtube.com/@ChilledBeer", "_blank", "noopener,noreferrer")}
+            className="w-full sm:w-auto justify-center flex text-base py-4"
           >
             <div className="flex items-center gap-2">
-              <Youtube size={18} />
+              <Youtube size={20} />
               Visit Channel
             </div>
           </PixelButton>
@@ -216,13 +231,13 @@ const Hero = () => {
 
 const ChannelStats = () => {
   return (
-    <section id="content" className="py-20 bg-gray-900 relative">
+    <section id="content" className="py-12 md:py-20 bg-gray-900 relative">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row gap-12 items-start">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
           {/* Character Card / Profile */}
-          <div className="w-full md:w-1/3 sticky top-24">
-            <PixelCard className="bg-gray-800 border-gray-600 text-center">
-              <div className="w-32 h-32 bg-gray-900 mx-auto mb-6 border-4 border-white overflow-hidden relative group">
+          <div className="w-full md:w-1/3 static md:sticky md:top-24">
+            <PixelCard className="bg-gray-800 border-gray-600 text-center h-full md:h-auto">
+              <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-900 mx-auto mb-6 border-4 border-white overflow-hidden relative group">
                 {/* Avatar Placeholder - Pixel Art Smiley */}
                 <div className="w-full h-full flex items-center justify-center bg-[#f4d73b]">
                   <div className="space-y-1 relative">
@@ -299,7 +314,7 @@ const ChannelStats = () => {
 
 const CollabSection = () => {
   return (
-    <section id="collab" className="py-20 bg-[#0a0a0a] relative overflow-hidden">
+    <section id="collab" className="py-12 md:py-20 bg-[#0a0a0a] relative overflow-hidden">
       {/* Decorative Pixels */}
       <div className="absolute top-0 right-0 p-8 opacity-20 hidden lg:block">
         <div className="grid grid-cols-4 gap-2">
@@ -312,22 +327,22 @@ const CollabSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto">
           <PixelCard title="MULTIPLAYER LOBBY" className="bg-[#111] border-green-500/30">
-            <div className="text-center mb-10">
+            <div className="text-center mb-8 md:mb-10">
               <h2 className="text-3xl md:text-5xl font-vt323 text-white mb-4">
                 JOIN THE <span className="text-green-400">PARTY</span>
               </h2>
-              <p className="text-gray-400 font-mono">
-                Are you building something cool in Bangalore? <br />
-                We are looking for Developers, Designers, and Founders to share their stories.
+              <p className="text-sm md:text-base text-gray-400 font-mono">
+                Are you building something cool in Bangalore? <br className="hidden md:block" />
+                We are looking for Developers, Designers, Creators and Founders to share their stories.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-black/50 p-6 border-2 border-dashed border-gray-700">
-                <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+              <div className="bg-black/50 p-4 md:p-6 border-2 border-dashed border-gray-700">
+                <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm md:text-base">
                   <Coffee size={20} className="text-yellow-400" /> Why Connect?
                 </h3>
-                <ul className="space-y-4 text-sm text-gray-300 font-mono">
+                <ul className="space-y-4 text-xs md:text-sm text-gray-300 font-mono">
                   <li className="flex gap-3">
                     <ChevronRight size={16} className="text-green-400 mt-1 shrink-0" />
                     <span>Feature your product on ChilledBeer YouTube</span>
