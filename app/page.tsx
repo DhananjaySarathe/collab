@@ -222,7 +222,7 @@ const RetroTV = ({ videoId, title }: { videoId: string; title: string }) => (
 
 // --- Sections ---
 
-const Navbar = () => (
+const Navbar = ({ onConnectClick }: { onConnectClick: () => void }) => (
   <nav className="fixed top-0 left-0 right-0 bg-gray-900/90 backdrop-blur-md border-b-4 border-gray-800 z-50 h-16 flex items-center px-4 md:px-8 justify-between">
     <div className="flex items-center gap-3">
       <div className="w-8 h-8 bg-yellow-400 border-2 border-white animate-pulse shadow-[0_0_10px_rgba(250,204,21,0.5)]"></div>
@@ -244,7 +244,11 @@ const Navbar = () => (
         Collab
       </a>
     </div>
-    <PixelButton variant="primary" className="!py-1 !px-3 !text-xs">
+    <PixelButton 
+      variant="primary" 
+      className="!py-1 !px-3 !text-xs"
+      onClick={onConnectClick}
+    >
       Connect
     </PixelButton>
   </nav>
@@ -399,8 +403,13 @@ const ChannelStats = () => {
   );
 };
 
-const CollabSection = () => {
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
+const CollabSection = ({ 
+  isModalOpen, 
+  setIsModalOpen 
+}: { 
+  isModalOpen: boolean; 
+  setIsModalOpen: (open: boolean) => void;
+}) => {
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
@@ -412,13 +421,24 @@ const CollabSection = () => {
       // When iframe loads, form was submitted
       setIsSubmitted(true);
       
-      // Track successful form submission
+      // Track successful form submission with readable property names
       const form = document.querySelector('form') as HTMLFormElement;
       if (form) {
         const formData = new FormData(form);
+        
+        // Map Google Forms entry IDs to readable property names
+        const fieldMapping: Record<string, string> = {
+          'entry.575236684': 'Name',
+          'entry.113215161': 'Communication Channel',
+          'entry.1261980469': 'Guild / Project',
+          'entry.272861269': 'The Context',
+        };
+        
         const submissionData: Record<string, string> = {};
         formData.forEach((value, key) => {
-          submissionData[key] = value.toString();
+          // Use readable name if mapping exists, otherwise use original key
+          const propertyName = fieldMapping[key] || key;
+          submissionData[propertyName] = value.toString();
         });
         
         trackFormSubmission('Join The Party Form', {
@@ -622,12 +642,22 @@ const Footer = () => (
 );
 
 export default function Page() {
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  const handleConnectClick = () => {
+    setIsModalOpen(true);
+    trackButtonClick('Connect', {
+      location: 'navbar',
+      timestamp: new Date().toISOString(),
+    });
+  };
+
   return (
     <div className="bg-[#050505] min-h-screen font-sans selection:bg-green-500 selection:text-black">
-      <Navbar />
+      <Navbar onConnectClick={handleConnectClick} />
       <Hero />
       <ChannelStats />
-      <CollabSection />
+      <CollabSection isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
       <Footer />
     </div>
   );
